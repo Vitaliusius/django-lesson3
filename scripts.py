@@ -8,34 +8,34 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 def fix_marks(childrens_name):
-    child = handling_error(childrens_name)
+    child = get_schoolkid_or_lessons(childrens_name)
     Mark.objects.filter(schoolkid=child, points__lt=4).update(points=5)
 
 
 def delete_chastisements(childrens_name):
-    child = handling_error(childrens_name)
+    child = get_schoolkid_or_lessons(childrens_name)
     Chastisement.objects.filter(schoolkid=child).delete()
 
 
-def handling_error(childrens_name):
+def get_schoolkid_or_lessons(childrens_name, subject=0):
     try:
-        childrens_name = Schoolkid.objects.get(full_name__contains=childrens_name)
-        return childrens_name
+        if subject==0:
+            schoolkid = Schoolkid.objects.get(full_name__contains=childrens_name)
+            return schoolkid
+        else:
+            lessons = Lesson.objects.filter(subject__title=subject, subject__year_of_study=6)
+            return lessons
     except ObjectDoesNotExist:
-        print('Нет такого имени')
+        print('Неправильно введено имя')
     except Schoolkid.MultipleObjectsReturned:
         print('Нашлось несколько имен')
-
-
+    
+        
 def create_commendation(childrens_name, lessons_name):
     try:
-        Lesson.objects.get(subject__title=lessons_name)
-    except ObjectDoesNotExist:
-        print('Нет такого предмета')
-    except Lesson.MultipleObjectsReturned:
-        lessons = Lesson.objects.filter(subject__title=lessons_name, subject__year_of_study=6)
+        lessons = get_schoolkid_or_lessons(childrens_name, lessons_name)
         lesson = random.choice(lessons)
-        child = handling_error(childrens_name)
+        child = get_schoolkid_or_lessons(childrens_name)
         praises = [
                     'Молодец!',
                     'Отлично!',
@@ -70,3 +70,5 @@ def create_commendation(childrens_name, lessons_name):
         ]
         Commendation.objects.create(text=random.choice(praises), created = lesson.date,
                                     schoolkid=child, subject=lesson.subject, teacher=lesson.teacher)
+    except IndexError:
+        print('Нет такого предмета')
