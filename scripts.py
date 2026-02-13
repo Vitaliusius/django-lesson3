@@ -32,9 +32,12 @@ def get_schoolkid_or_lessons(childrens_name, subject=0):
     
         
 def create_commendation(childrens_name, lessons_name):
-    try:
         lessons = get_schoolkid_or_lessons(childrens_name, lessons_name)
-        lesson = random.choice(lessons)
+        if lessons.exists()==True:
+            lesson = random.choice(lessons)
+        else:
+            print('Нет такого предмета')
+            exit()
         child = get_schoolkid_or_lessons(childrens_name)
         praises = [
                     'Молодец!',
@@ -70,5 +73,4 @@ def create_commendation(childrens_name, lessons_name):
         ]
         Commendation.objects.create(text=random.choice(praises), created = lesson.date,
                                     schoolkid=child, subject=lesson.subject, teacher=lesson.teacher)
-    except IndexError:
-        print('Нет такого предмета')
+        
